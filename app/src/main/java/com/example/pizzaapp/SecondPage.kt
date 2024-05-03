@@ -75,11 +75,13 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.navigation.NavHostController
 
 @Composable
-fun SecondPage(navController: NavHostController) {
+fun SecondPage(navController: NavHostController, mainViewModel : MainViewModel) {
+//    val itemsList = mainViewModel.itemsList.collectAsState(initial = emptyList())
+
     Box(
         modifier = Modifier
-            .background(Color(android.graphics.Color.parseColor("#C9E1F2")))
-            .fillMaxSize()
+                .background(Color(android.graphics.Color.parseColor("#C9E1F2")))
+                .fillMaxSize()
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -88,10 +90,10 @@ fun SecondPage(navController: NavHostController) {
             topSecondPageText()
             carouselSecondPage()
             timeIntervalSelectorSecondPage()
-            descriptionField()
+            descriptionField(mainViewModel)
             Row {
                 Box() {
-                    SaveButton(navController)
+                    SaveButton(navController, mainViewModel)
                 }
             }
         }
@@ -99,7 +101,7 @@ fun SecondPage(navController: NavHostController) {
 }
 
 @Composable
-private fun descriptionField() {
+private fun descriptionField(mainViewModel: MainViewModel) {
     Row(
         modifier = Modifier
             .padding(15.dp)
@@ -114,7 +116,8 @@ private fun descriptionField() {
     }
     TransparentPlaceholderTextField(
         placeholder = "Введите текст...",
-        onValueChange = { /* Обработка изменений введенного текста */ }
+        onValueChange = { /* Обработка изменений введенного текста */ },
+        mainViewModel = mainViewModel
     )
 }
 
@@ -297,56 +300,57 @@ private fun topSecondPageText() {
     }
 }
 
-@Composable
+//@Composable
 //    fun SideSheetView(navController: NavHostController) {
-fun SideSheetView() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(android.graphics.Color.parseColor("#F3EDF7")))
-    ) {
-        Column(
-            horizontalAlignment = Alignment.Start
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = {
-                        // Возврат на предыдущий экран (назад)
-//                            navController.navigateUp()
-                    },
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-                    Icon(Icons.Filled.ArrowBack, "Back")
-                }
-                Text(
-                    text = "New note",
-                    style = TextStyle(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black
-                    )
-                )
-            }
-            TransparentPlaceholderTextField(
-                placeholder = "Введите текст...",
-                onValueChange = { /* Обработка изменений введенного текста */ }
-            )
-        }
-    }
-}
+//fun SideSheetView() {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color(android.graphics.Color.parseColor("#F3EDF7")))
+//    ) {
+//        Column(
+//            horizontalAlignment = Alignment.Start
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                IconButton(
+//                    onClick = {
+//                        // Возврат на предыдущий экран (назад)
+////                            navController.navigateUp()
+//                    },
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                ) {
+//                    Icon(Icons.Filled.ArrowBack, "Back")
+//                }
+//                Text(
+//                    text = "New note",
+//                    style = TextStyle(
+//                        fontSize = 22.sp,
+//                        fontWeight = FontWeight.Normal,
+//                        color = Color.Black
+//                    )
+//                )
+//            }
+//            TransparentPlaceholderTextField(
+//                placeholder = "Введите текст...",
+//                onValueChange = { /* Обработка изменений введенного текста */ }
+//            )
+//        }
+//    }
+//}
 
 @Composable
 fun TransparentPlaceholderTextField(
     placeholder: String,
+    mainViewModel : MainViewModel,
     onValueChange: (TextFieldValue) -> Unit
 ) {
     val backgroundColor = Color(android.graphics.Color.parseColor("#F3EDF7"))
-    var text by remember { mutableStateOf("") }
+    val text by remember { mutableStateOf("") }
 
     TextField(
-        value = text,
-        onValueChange = { text = it },
+        value = mainViewModel.newText.value,
+        onValueChange = { mainViewModel.newText.value = it },
         placeholder = { PlaceholderText(text = placeholder) },
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -374,10 +378,11 @@ private fun PlaceholderText(text: String) {
 }
 
 @Composable
-fun SaveButton(navController: NavHostController) {
+fun SaveButton(navController: NavHostController, mainViewModel : MainViewModel) {
     Button(
         onClick = {
 // Возврат на предыдущий экран (назад)
+            mainViewModel.insertItem()
             navController.navigate("MainPage")
         },
         modifier = Modifier

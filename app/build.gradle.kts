@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+//    id("com.google.devtools.ksp") version "1.5.30-1.0.0"
+    id("kotlin-kapt")
+
 }
 
 android {
@@ -50,6 +53,37 @@ android {
 }
 
 dependencies {
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    implementation(libs.room.ktx)
+    implementation(libs.room.runtime)
+//    implementation(libs.room.compiler)
+    implementation(libs.lifecycle.viewmodel.compose)
+//    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // Google maps
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    // Google maps for compose
+    implementation("com.google.maps.android:maps-compose:2.8.0")
+    // KTX for the Maps SDK for Android
+    implementation("com.google.maps.android:maps-ktx:3.2.1")
+    // KTX for the Maps SDK for Android Utility Library
+    implementation("com.google.maps.android:maps-utils-ktx:3.2.1")
+
+//    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+//    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+//    implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
+//
+//    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+//    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("com.android.volley:volley:1.2.1")
+    implementation("com.google.code.gson:gson:2.8.9")
+    implementation("androidx.appcompat:appcompat:1.3.1")
+//    implementation("androidx.compose.runtime:runtime-livedata:2.7.7")
+    implementation(libs.androidx.compose.runtime)
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

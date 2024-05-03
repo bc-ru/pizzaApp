@@ -1,8 +1,5 @@
 package com.example.pizzaapp
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.pizzaapp.ui.theme.PizzaAppTheme
 import kotlinx.coroutines.delay
 import java.time.LocalTime
 import android.graphics.Paint
@@ -42,40 +37,50 @@ import kotlin.math.cos
 import kotlin.math.sin
 import android.graphics.Path
 import android.graphics.RectF
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TextField
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.navigation.NavHostController
+import com.example.pizzaapp.data.NameEntity
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 
 @Composable
-fun MainPage(navController: NavHostController) {
+fun MainPage(navController: NavHostController, mainViewModel : MainViewModel) {
     Box(
         modifier = Modifier
             .background(Color(android.graphics.Color.parseColor("#C9E1F2")))
@@ -91,54 +96,66 @@ fun MainPage(navController: NavHostController) {
             Clock()
             ButtonPlus(navController)
             ReminderText()
-            ReminderList()
+            ReminderList(mainViewModel)
         }
     }
 }
+
 data class ReminderItemSample(val text: String, val timeStart: String, val timeEnd: String)
 
 @Composable
-fun ReminderList() {
-    val reminderItems: List<ReminderItemSample> = listOf(
-        ReminderItemSample(
-            text = "Пишем перевод по доп английскому",
-            timeStart = "12:00",
-            timeEnd = "16:00"
-        ),
-        ReminderItemSample(
-            text = "Тренировка",
-            timeStart = "18:50",
-            timeEnd = "21:30"
-        ),
-        ReminderItemSample(
-            text = "Вечерний чилл",
-            timeStart = "22:00",
-            timeEnd = "23:30"
-        ),
-        ReminderItemSample(
-            text = "Тренировка",
-            timeStart = "18:50",
-            timeEnd = "21:30"
-        ),
-        ReminderItemSample(
-            text = "Тренировка",
-            timeStart = "18:50",
-            timeEnd = "21:30"
-        ),
-    )
+fun ReminderList(mainViewModel : MainViewModel) {
+    val itemsList = mainViewModel.itemsList.collectAsState(initial = emptyList())
+
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        items(reminderItems) { reminderItem ->
+        items(itemsList.value) { reminderItem ->
             ReminderListItem(
-                text = reminderItem.text,
-                timeStart = reminderItem.timeStart,
-                timeEnd = reminderItem.timeEnd
+                item = reminderItem,
+                mainViewModel = mainViewModel,
+                onLocationSelected = { latLng ->
+                    // Обработайте выбранное местоположение здесь
+                    // Например, сохраните его в базе данных или используйте для других целей
+                }
             )
         }
     }
 }
+
+@Composable
+fun MapScreen(onLocationSelected: (LatLng) -> Unit) {
+    val mapProperties = remember { MapProperties() }
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(55.755826, 37.6173), 10f)
+    }
+    val markerState = remember { mutableStateOf<MarkerState?>(null) }
+
+    GoogleMap(
+        modifier = Modifier.fillMaxWidth()
+            .fillMaxHeight(0.8f),
+        properties = mapProperties,
+        cameraPositionState = cameraPositionState,
+        onMapClick = { latLng ->
+            markerState.value?.let {
+                it.position = latLng
+            } ?: run {
+                markerState.value = MarkerState(position = latLng)
+            }
+            onLocationSelected(latLng)
+        }
+    ) {
+        markerState.value?.let { marker ->
+            Marker(
+                state = marker,
+                title = "Выбранное местоположение",
+                snippet = "Нажмите здесь, чтобы выбрать это место"
+            )
+        }
+    }
+}
+
 
 @Composable
 private fun ReminderText() {
@@ -165,12 +182,14 @@ private fun ReminderText() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReminderListItem(
-    text: String = "Пишем перевод по доп английскому",
-    timeStart: String = "12:00",
-    timeEnd: String = "16:00"
+    item: NameEntity,
+    mainViewModel: MainViewModel,
+    onLocationSelected: (LatLng) -> Unit,
 ) {
+
 
     val cardStyle = TextStyle(
         fontSize = 15.sp,
@@ -179,27 +198,29 @@ private fun ReminderListItem(
         color = Color.White
     )
 
+    val openDialog = remember { mutableStateOf(false) }
+    val selectedLocation = remember { mutableStateOf<LatLng?>(null) }
+
 
     Column {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.Transparent)
-                .padding(3.5.dp),  // Отступы снаружи карточки
+                .padding(3.5.dp)  // Отступы снаружи карточки
+                .clickable(onClick = { openDialog.value = true }),
             shape = RoundedCornerShape(15.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),  // Эффект "над экраном"
         ) {
             Box(
                 modifier = Modifier
-//                        .background(Color(android.graphics.Color.parseColor("#F7F2FA")))
                     .background(Color(android.graphics.Color.parseColor("#8572FF")))
                     .fillMaxWidth()
                     .padding(10.dp),
             ) {
                 Row(
-//                        modifier = Modifier.fillMaxHeight(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_calendar_today_24),
@@ -207,9 +228,11 @@ private fun ReminderListItem(
                         modifier = Modifier
                             .padding(horizontal = 15.dp)
                     )
-                    Column {
+                    Column (
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
-                            text = text,
+                            text = item.text,
                             style = cardStyle
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -220,15 +243,57 @@ private fun ReminderListItem(
                                 modifier = Modifier.padding(end = 5.dp)
                             )
                             Text(
-                                text = "$timeStart - $timeEnd",
+                                text = "12:00 - 16:00",
                             )
                         }
                     }
-
+                    IconButton(
+                        onClick = {mainViewModel.deleteItem(item)}
+                    ) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    }
 
                 }
             }
         }
+    }
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = { openDialog.value = false },
+            content = {
+                Column(modifier = Modifier
+                    .background(Color.White)
+                    .padding(20.dp)) {
+                    TextField(value = item.text, onValueChange = { newText ->
+                        // Обновите значение текста элемента здесь
+                        mainViewModel.updateItemText(item.copy(text = newText))
+                    })
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Выберите местоположение на карте.")
+                    Spacer(modifier = Modifier.height(16.dp))
+//                    GoogleMap(
+//                        modifier = Modifier.height(200.dp),
+//                        onMapLongClick = { latLng ->
+//                            selectedLocation.value = latLng
+//                            onLocationSelected(latLng)
+//                            openDialog.value = false
+//                        }
+//                    )
+                    MapScreen(onLocationSelected = { latLng -> })
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                            onClick = {
+                                openDialog.value = false
+                            }
+                        ) {
+                            Text("Сохранить")
+                        }
+                    Button(onClick = { openDialog.value = false }) {
+                        Text("Закрыть")
+                    }
+                }
+            }
+        )
     }
 }
 

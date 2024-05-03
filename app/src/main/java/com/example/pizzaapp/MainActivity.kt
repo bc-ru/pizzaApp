@@ -1,5 +1,6 @@
 package com.example.pizzaapp
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,6 +43,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import android.graphics.Path
 import android.graphics.RectF
+import androidx.activity.viewModels
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -72,22 +74,26 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TextFieldDefaults
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.pizzaapp.data.MainDB
 
 
 class MainActivity : ComponentActivity() {
+    private val mainViewModel: MainViewModel by viewModels(factoryProducer = { return@viewModels MainViewModel.factory })
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
 
             PizzaAppTheme {
                 val navController: NavHostController = rememberNavController()
+
                 NavHost(navController, startDestination = "MainPage") {
-                    composable("MainPage") { MainPage(navController) }
-                    composable("SecondPage") { SecondPage(navController) }
+                    composable("MainPage") { MainPage(navController, mainViewModel) }
+                    composable("SecondPage") { SecondPage(navController, mainViewModel) }
 
                 }
             }
@@ -95,19 +101,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-    @Composable
-    fun MainScreen(NavHostController: NavHostController) {
-        NavHost(NavHostController, startDestination = "MainPage") {
-            composable("MainPage") { MainPage(NavHostController) }
-            composable("SecondPage") { SecondPage(NavHostController) }
-        }
+//    @Composable
+//    fun MainScreen(NavHostController: NavHostController) {
+//        NavHost(NavHostController, startDestination = "MainPage") {
+//            composable("MainPage") { MainPage(NavHostController) }
+//            composable("SecondPage") { SecondPage(NavHostController) }
+//        }
+//    }
+
+class DbInit : Application() {
+    val database by lazy { MainDB.createDataBase(this)
     }
-
-
-
-
-
-
-
-
-
+}
