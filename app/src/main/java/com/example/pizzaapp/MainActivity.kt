@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
                 val navController: NavHostController = rememberNavController()
 
                 NavHost(navController, startDestination = "MainPage") {
-                    composable("MainPage") { MainPage(navController, mainViewModel) }
+                    composable("MainPage") { MainPage(navController, mainViewModel, this@MainActivity) }
                     composable("SecondPage") { SecondPage(navController, mainViewModel) }
 
                 }

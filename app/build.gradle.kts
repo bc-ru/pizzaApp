@@ -70,6 +70,8 @@ dependencies {
     // KTX for the Maps SDK for Android Utility Library
     implementation("com.google.maps.android:maps-utils-ktx:3.2.1")
 
+    implementation("io.coil-kt:coil-compose:2.0.0-rc01")
+
 //    implementation("com.squareup.retrofit2:retrofit:2.9.0")
 //    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
 //    implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
